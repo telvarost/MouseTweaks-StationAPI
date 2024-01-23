@@ -2,7 +2,7 @@
 
 A StationAPI port of the MouseTweaks mod for Minecraft Beta 1.7.3 with some modern Minecraft tweaks on the side.
 
-# Inventory Tweaks
+# Mod Info:
 
 This mod is currently incompatible with the regular version of MojangFix. If you would like to use that mod you will need the compatibility version of the mod for MouseTweaks found here: [https://github.com/telvarost/MojangFix-StationAPI/releases](https://github.com/telvarost/MojangFix-StationAPI/releases)
 
