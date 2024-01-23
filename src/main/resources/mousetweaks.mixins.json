@@ -1,0 +1,17 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.github.telvarost.mousetweaks.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "ContainerBaseMixin"
+  ],
+  "server": [
+  ],
+  "client": [
+    "MinecraftAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
