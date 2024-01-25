@@ -331,36 +331,41 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 						{
 							if (slotItemToExamine.isDamageAndIDIdentical(leftClickMouseTweaksPersistentStack))
 							{
-								ItemInstance cursorStack = minecraft.player.inventory.getCursorItem();
+								if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
+									this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, true, this.minecraft.player);
+								} else {
+									ItemInstance cursorStack = minecraft.player.inventory.getCursorItem();
 
-								if (cursorStack == null)
-								{
-									/** - Pick up items from slot */
-									this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, false, this.minecraft.player);
-								} else if (cursorStack.count < leftClickMouseTweaksPersistentStack.getMaxStackSize()) {
-									/** @todo - All of the logic in this block could be improved */
-									int amountAbleToPickUp = leftClickMouseTweaksPersistentStack.getMaxStackSize() - cursorStack.count;
-									int amountInSlot = slotItemToExamine.count;
-
-									if (amountInSlot <= amountAbleToPickUp) {
+									if (cursorStack == null) {
 										/** - Pick up items from slot */
 										this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, false, this.minecraft.player);
-										this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, false, this.minecraft.player);
-									} else if (cursorStack.count == leftClickMouseTweaksPersistentStack.getMaxStackSize()) {
-										slot.setStack(new ItemInstance(leftClickMouseTweaksPersistentStack.itemId, cursorStack.count, leftClickMouseTweaksPersistentStack.getDamage()));
-										minecraft.player.inventory.setCursorItem(new ItemInstance(leftClickMouseTweaksPersistentStack.itemId, amountInSlot, leftClickMouseTweaksPersistentStack.getDamage()));
-									} else {
-										this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, false, this.minecraft.player);
+									} else if (cursorStack.count < leftClickMouseTweaksPersistentStack.getMaxStackSize()) {
+										/** @todo - All of the logic in this block could be improved */
+										int amountAbleToPickUp = leftClickMouseTweaksPersistentStack.getMaxStackSize() - cursorStack.count;
+										int amountInSlot = slotItemToExamine.count;
 
-										slotItemToExamine = slot.getItem();
-										cursorStack = minecraft.player.inventory.getCursorItem();
-										amountInSlot = slotItemToExamine.count;
+										if (amountInSlot <= amountAbleToPickUp) {
+											/** - Pick up items from slot */
+											this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, false, this.minecraft.player);
+											this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, false, this.minecraft.player);
+										} else if (cursorStack.count == leftClickMouseTweaksPersistentStack.getMaxStackSize()) {
+											slot.setStack(new ItemInstance(leftClickMouseTweaksPersistentStack.itemId, cursorStack.count, leftClickMouseTweaksPersistentStack.getDamage()));
+											minecraft.player.inventory.setCursorItem(new ItemInstance(leftClickMouseTweaksPersistentStack.itemId, amountInSlot, leftClickMouseTweaksPersistentStack.getDamage()));
+										} else {
+											this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, false, this.minecraft.player);
 
-										slot.setStack(new ItemInstance(leftClickMouseTweaksPersistentStack.itemId, cursorStack.count, leftClickMouseTweaksPersistentStack.getDamage()));
-										minecraft.player.inventory.setCursorItem(new ItemInstance(leftClickMouseTweaksPersistentStack.itemId, amountInSlot, leftClickMouseTweaksPersistentStack.getDamage()));
+											slotItemToExamine = slot.getItem();
+											cursorStack = minecraft.player.inventory.getCursorItem();
+											amountInSlot = slotItemToExamine.count;
+
+											slot.setStack(new ItemInstance(leftClickMouseTweaksPersistentStack.itemId, cursorStack.count, leftClickMouseTweaksPersistentStack.getDamage()));
+											minecraft.player.inventory.setCursorItem(new ItemInstance(leftClickMouseTweaksPersistentStack.itemId, amountInSlot, leftClickMouseTweaksPersistentStack.getDamage()));
+										}
 									}
 								}
 							}
+						} else if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
+							this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, true, this.minecraft.player);
 						}
 					}
 				}
