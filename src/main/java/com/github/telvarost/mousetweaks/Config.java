@@ -10,7 +10,7 @@ public class Config {
 
     public static class ConfigFields {
 
-//        @ConfigName("Fix double doors")
-//        public static Boolean FIX_DOUBLE_DOORS = true;
+//        @ConfigName("")
+//        public static Boolean UNKNOWN = true;
     }
 }
