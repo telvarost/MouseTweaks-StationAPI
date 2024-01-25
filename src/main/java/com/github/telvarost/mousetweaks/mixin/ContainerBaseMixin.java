@@ -334,7 +334,10 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 							if (slotItemToExamine.isDamageAndIDIdentical(leftClickMouseTweaksPersistentStack))
 							{
 								if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) {
-									this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, true, this.minecraft.player);
+									if (Config.ConfigFields.LMBTweakWithItem)
+									{
+										this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, true, this.minecraft.player);
+									}
 								} else {
 									ItemInstance cursorStack = minecraft.player.inventory.getCursorItem();
 
@@ -366,7 +369,11 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 									}
 								}
 							}
-						} else if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) {
+						} else if (  (Config.ConfigFields.LMBTweakWithoutItem)
+								  && (  (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
+							         || (Keyboard.isKeyDown(Keyboard.KEY_RSHIFT))
+					                 )
+					    ) {
 							this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, true, this.minecraft.player);
 						}
 					}
