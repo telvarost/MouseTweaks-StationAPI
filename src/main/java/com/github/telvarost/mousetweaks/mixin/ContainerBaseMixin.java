@@ -1,5 +1,6 @@
 package com.github.telvarost.mousetweaks.mixin;
 
+import com.github.telvarost.mousetweaks.Config;
 import net.minecraft.client.gui.screen.ScreenBase;
 import net.minecraft.client.gui.screen.container.ContainerBase;
 import net.minecraft.item.ItemBase;
@@ -63,7 +64,7 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 
 	@Unique List<Integer> leftClickAmountToFillPersistent = new ArrayList<>();
 
-	@Unique List<Integer> rightClickAmountToFillPersistent = new ArrayList<>();
+	@Unique int lastSlotId = -1;
 
 	@Unique private void mouseTweaks_resetLeftClickDragVariables()
 	{
@@ -140,6 +141,7 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 					}
 
 					/** - Handle initial Right-click */
+					lastSlotId = clickedSlot.id;
 					this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, clickedSlot.id, 1, false, this.minecraft.player);
 					ci.cancel();
 					return;
@@ -254,6 +256,13 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 					}
 
 					/** - Distribute one item to the slot */
+					lastSlotId = slot.id;
+					this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 1, false, this.minecraft.player);
+				}
+			} else if (Config.ConfigFields.RMBTweak) {
+				if (slot.id != lastSlotId) {
+					/** - Distribute one item to the slot */
+					lastSlotId = slot.id;
 					this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 1, false, this.minecraft.player);
 				}
 			}

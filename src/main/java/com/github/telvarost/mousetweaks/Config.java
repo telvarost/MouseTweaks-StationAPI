@@ -10,7 +10,7 @@ public class Config {
 
     public static class ConfigFields {
 
-//        @ConfigName("")
-//        public static Boolean UNKNOWN = true;
+        @ConfigName("Allow `Right-Click + Drag` over existing slots")
+        public static Boolean RMBTweak = true;
     }
 }
