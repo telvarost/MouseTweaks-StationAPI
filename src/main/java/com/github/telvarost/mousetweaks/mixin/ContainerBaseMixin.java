@@ -228,11 +228,13 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 					/** - Handle if a button was clicked */
 					super.mouseClicked(mouseX, mouseY, button);
 
-					/** - Handle initial Left-click */
-					this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, clickedSlot.id, 0, false, this.minecraft.player);
-
 					/** - Get info for MouseTweaks `Left-Click + Drag` mechanics */
-					leftClickMouseTweaksPersistentStack = minecraft.player.inventory.getCursorItem();
+					ItemInstance itemInSlot = clickedSlot.getItem();
+					leftClickMouseTweaksPersistentStack = itemInSlot;
+
+					/** - Handle initial Left-click */
+					boolean isShiftKeyDown = (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT));
+					this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, clickedSlot.id, 0, isShiftKeyDown, this.minecraft.player);
 
 					ci.cancel();
 					return;
@@ -331,7 +333,7 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 						{
 							if (slotItemToExamine.isDamageAndIDIdentical(leftClickMouseTweaksPersistentStack))
 							{
-								if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
+								if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) {
 									this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, true, this.minecraft.player);
 								} else {
 									ItemInstance cursorStack = minecraft.player.inventory.getCursorItem();
@@ -364,7 +366,7 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 									}
 								}
 							}
-						} else if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
+						} else if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) {
 							this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, true, this.minecraft.player);
 						}
 					}
