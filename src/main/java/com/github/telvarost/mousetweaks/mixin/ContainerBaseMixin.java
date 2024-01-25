@@ -256,6 +256,7 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 		if (  ( button == -1 )
 		   && ( Mouse.isButtonDown(1) )
 		   && ( isLeftClickDragStarted == false )
+		   && ( isLeftClickDragMouseTweaksStarted == false )
 		   && ( rightClickPersistentStack != null )
 		   )
 		{
@@ -268,8 +269,14 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 					return;
 				}
 
+				/** - Do nothing if the slot is full */
+				if (null != slotItemToExamine && slotItemToExamine.count == rightClickPersistentStack.getMaxStackSize()) {
+					return;
+				}
+
 				/** - Do nothing if there are no more items to distribute */
-				if (1.0 == (double)rightClickItemAmount / (double)rightClickHoveredSlots.size()) {
+				ItemInstance cursorStack = minecraft.player.inventory.getCursorItem();
+				if (null == cursorStack) {
 					return;
 				}
 
@@ -293,9 +300,13 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 				}
 			} else if (Config.ConfigFields.RMBTweak) {
 				if (slot.id != lastRMBSlotId) {
-					/** - Distribute one item to the slot */
-					lastRMBSlotId = slot.id;
-					this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 1, false, this.minecraft.player);
+					ItemInstance cursorStack = minecraft.player.inventory.getCursorItem();
+
+					if (null != cursorStack) {
+						/** - Distribute one item to the slot */
+						lastRMBSlotId = slot.id;
+						this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 1, false, this.minecraft.player);
+					}
 				}
 			}
 		} else {
@@ -322,10 +333,32 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 							{
 								ItemInstance cursorStack = minecraft.player.inventory.getCursorItem();
 
-								if (cursorStack.count < leftClickMouseTweaksPersistentStack.getMaxStackSize())
+								if (cursorStack == null)
 								{
 									/** - Pick up items from slot */
 									this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, false, this.minecraft.player);
+								} else if (cursorStack.count < leftClickMouseTweaksPersistentStack.getMaxStackSize()) {
+									/** @todo - All of the logic in this block could be improved */
+									int amountAbleToPickUp = leftClickMouseTweaksPersistentStack.getMaxStackSize() - cursorStack.count;
+									int amountInSlot = slotItemToExamine.count;
+
+									if (amountInSlot <= amountAbleToPickUp) {
+										/** - Pick up items from slot */
+										this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, false, this.minecraft.player);
+										this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, false, this.minecraft.player);
+									} else if (cursorStack.count == leftClickMouseTweaksPersistentStack.getMaxStackSize()) {
+										slot.setStack(new ItemInstance(leftClickMouseTweaksPersistentStack.itemId, cursorStack.count, leftClickMouseTweaksPersistentStack.getDamage()));
+										minecraft.player.inventory.setCursorItem(new ItemInstance(leftClickMouseTweaksPersistentStack.itemId, amountInSlot, leftClickMouseTweaksPersistentStack.getDamage()));
+									} else {
+										this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, false, this.minecraft.player);
+
+										slotItemToExamine = slot.getItem();
+										cursorStack = minecraft.player.inventory.getCursorItem();
+										amountInSlot = slotItemToExamine.count;
+
+										slot.setStack(new ItemInstance(leftClickMouseTweaksPersistentStack.itemId, cursorStack.count, leftClickMouseTweaksPersistentStack.getDamage()));
+										minecraft.player.inventory.setCursorItem(new ItemInstance(leftClickMouseTweaksPersistentStack.itemId, amountInSlot, leftClickMouseTweaksPersistentStack.getDamage()));
+									}
 								}
 							}
 						}
@@ -415,6 +448,8 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 						}
 					}
 				}
+			} else {
+				mouseTweaks_resetLeftClickDragVariables();
 			}
 		} else {
 			mouseTweaks_resetLeftClickDragVariables();
