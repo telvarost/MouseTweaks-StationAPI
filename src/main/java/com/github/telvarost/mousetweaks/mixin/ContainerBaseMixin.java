@@ -38,10 +38,13 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 	private Slot slot;
 
 	@Unique
-	private ItemInstance leftClickPersistentStack;
+	private ItemInstance leftClickMouseTweaksPersistentStack = null;
 
 	@Unique
-	private ItemInstance rightClickPersistentStack;
+	private ItemInstance leftClickPersistentStack = null;
+
+	@Unique
+	private ItemInstance rightClickPersistentStack = null;
 
 	@Unique
 	private boolean isLeftClickDragStarted = false;
@@ -183,7 +186,7 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 				Slot clickedSlot = this.getSlot(mouseX, mouseY);
 				if (clickedSlot != null) {
 					/** - Handle if a button was clicked */
-						super.mouseClicked(mouseX, mouseY, button);
+					super.mouseClicked(mouseX, mouseY, button);
 
 					/** - Record how many items are in the slot and how many items are needed to fill the slot */
 					if (null != clickedSlot.getItem()) {
@@ -207,6 +210,25 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 					this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, clickedSlot.id, 0, false, this.minecraft.player);
 					ci.cancel();
 					return;
+				}
+			} else {
+				/** - Ensure a slot was clicked */
+				Slot clickedSlot = this.getSlot(mouseX, mouseY);
+				if (clickedSlot != null) {
+					/** - Handle if a button was clicked */
+					super.mouseClicked(mouseX, mouseY, button);
+
+					/** - Handle initial Left-click */
+					this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, clickedSlot.id, 0, false, this.minecraft.player);
+
+					/** - Get info for MouseTweaks `Left-Click + Drag` mechanics */
+					leftClickMouseTweaksPersistentStack = minecraft.player.inventory.getCursorItem();
+
+					ci.cancel();
+					return;
+				} else {
+					/** - Get info for MouseTweaks `Left-Click + Drag` mechanics */
+					leftClickMouseTweaksPersistentStack = null;
 				}
 			}
 		}
