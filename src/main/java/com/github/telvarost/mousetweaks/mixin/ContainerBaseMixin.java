@@ -82,11 +82,14 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 		if (button == 1) {
 			boolean exitFunction = false;
 
-			/** - Cancel Left-click + Drag */
-			exitFunction = mouseTweaks_cancelLeftClickDrag();
+			/** - Should click cancel Left-click + Drag */
+			if (!mouseTweaks_cancelLeftClickDrag()) {
 
-			/** - Handle Right-click */
-			exitFunction |= mouseTweaks_handleRightClick(mouseX, mouseY);
+				/** - Handle Right-click */
+				exitFunction = mouseTweaks_handleRightClick(mouseX, mouseY);
+			} else {
+				exitFunction = true;
+			}
 
 			if (exitFunction) {
 				/** - Handle if a button was clicked */
@@ -100,16 +103,19 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 		if (button == 0) {
 			boolean exitFunction = false;
 
-			/** - Cancel Right-click + Drag */
-			exitFunction = mouseTweaks_cancelRightClickDrag();
+			/** - Should click cancel Right-click + Drag */
+			if (!mouseTweaks_cancelRightClickDrag()) {
 
-			/** - Handle Left-click */
-			ItemInstance cursorStack = minecraft.player.inventory.getCursorItem();
-			Slot clickedSlot = this.getSlot(mouseX, mouseY);
-			if (cursorStack != null) {
-				exitFunction |= mouseTweaks_handleLeftClickWithItem(cursorStack, clickedSlot);
+				/** - Handle Left-click */
+				ItemInstance cursorStack = minecraft.player.inventory.getCursorItem();
+				Slot clickedSlot = this.getSlot(mouseX, mouseY);
+				if (cursorStack != null) {
+					exitFunction = mouseTweaks_handleLeftClickWithItem(cursorStack, clickedSlot);
+				} else {
+					exitFunction = mouseTweaks_handleLeftClickWithoutItem(clickedSlot);
+				}
 			} else {
-				exitFunction |= mouseTweaks_handleLeftClickWithoutItem(clickedSlot);
+				exitFunction = true;
 			}
 
 			if (exitFunction) {
@@ -137,8 +143,25 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 		   && ( rightClickPersistentStack != null )
 		   )
 		{
+			ItemInstance slotItemToExamine = slot.getItem();
+
+			/** - Do nothing if slot item does not match held item or if the slot is full */
+			if (  (null != slotItemToExamine)
+			   && (  (!slotItemToExamine.isDamageAndIDIdentical(rightClickPersistentStack))
+				  || (slotItemToExamine.count == rightClickPersistentStack.getMaxStackSize())
+			      )
+			) {
+				return;
+			}
+
+			/** - Do nothing if there are no more items to distribute */
+			ItemInstance cursorStack = minecraft.player.inventory.getCursorItem();
+			if (null == cursorStack) {
+				return;
+			}
+
 			if (!rightClickHoveredSlots.contains(slot)) {
-				mouseTweaks_handleRightClickDrag();
+				mouseTweaks_handleRightClickDrag(slotItemToExamine);
 			} else if (Config.ConfigFields.RMBTweak) {
 				mouseTweaks_handleRightClickDragMouseTweaks();
 			}
@@ -155,7 +178,9 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 			if (isLeftClickDragMouseTweaksStarted) {
 				mouseTweaks_handleLeftClickDragMouseTweaks();
 			} else if ( leftClickPersistentStack != null ) {
-				mouseTweaks_handleLeftClickDrag();
+				if (mouseTweaks_handleLeftClickDrag()) {
+					return;
+				}
 			} else {
 				mouseTweaks_resetLeftClickDragVariables();
 			}
@@ -206,7 +231,7 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 		if (slot.id != lastRMBSlotId) {
 			ItemInstance cursorStack = minecraft.player.inventory.getCursorItem();
 
-			if (null != cursorStack) {
+			if (null != cursorStack ) {
 				/** - Distribute one item to the slot */
 				lastRMBSlotId = slot.id;
 				this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 1, false, this.minecraft.player);
@@ -214,25 +239,7 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 		}
 	}
 
-	@Unique private void mouseTweaks_handleRightClickDrag() {
-		ItemInstance slotItemToExamine = slot.getItem();
-
-		/** - Do nothing if slot item does not match held item */
-		if (null != slotItemToExamine && !slotItemToExamine.isDamageAndIDIdentical(rightClickPersistentStack)) {
-			return;
-		}
-
-		/** - Do nothing if the slot is full */
-		if (null != slotItemToExamine && slotItemToExamine.count == rightClickPersistentStack.getMaxStackSize()) {
-			return;
-		}
-
-		/** - Do nothing if there are no more items to distribute */
-		ItemInstance cursorStack = minecraft.player.inventory.getCursorItem();
-		if (null == cursorStack) {
-			return;
-		}
-
+	@Unique private void mouseTweaks_handleRightClickDrag(ItemInstance slotItemToExamine) {
 		/** - Add slot to item distribution */
 		rightClickHoveredSlots.add(slot);
 
@@ -395,7 +402,7 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 		}
 	}
 
-	@Unique private void mouseTweaks_handleLeftClickDrag()
+	@Unique private boolean mouseTweaks_handleLeftClickDrag()
 	{
 		/** - Do nothing if slot has already been added to Left-click + Drag logic */
 		if (!leftClickHoveredSlots.contains(slot)) {
@@ -403,12 +410,12 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 
 			/** - Do nothing if slot item does not match held item */
 			if (null != slotItemToExamine && !slotItemToExamine.isDamageAndIDIdentical(leftClickPersistentStack)){
-				return;
+				return true;
 			}
 
 			/** - Do nothing if there are no more items to distribute */
 			if (1.0 == (double)leftClickItemAmount / (double)leftClickHoveredSlots.size()) {
-				return;
+				return true;
 			}
 
 			/** - Add slot to item distribution */
@@ -480,6 +487,8 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 				}
 			}
 		}
+
+		return false;
 	}
 
 	@Unique private boolean mouseTweaks_cancelLeftClickDrag()
