@@ -74,27 +74,6 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 
 	@Unique int lastLMBSlotId = -1;
 
-	@Unique private void mouseTweaks_resetLeftClickDragVariables()
-	{
-		leftClickExistingAmount.clear();
-		leftClickAmountToFillPersistent.clear();
-		leftClickHoveredSlots.clear();
-		leftClickPersistentStack = null;
-		leftClickMouseTweaksPersistentStack = null;
-		leftClickItemAmount = 0;
-		isLeftClickDragStarted = false;
-		isLeftClickDragMouseTweaksStarted = false;
-	}
-
-	@Unique private void mouseTweaks_resetRightClickDragVariables()
-	{
-		rightClickExistingAmount.clear();
-		rightClickHoveredSlots.clear();
-		rightClickPersistentStack = null;
-		rightClickItemAmount = 0;
-		isRightClickDragStarted = false;
-	}
-
 	@Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
 	protected void mouseTweaks_mouseClicked(int mouseX, int mouseY, int button, CallbackInfo ci) {
 		isLeftClickDragMouseTweaksStarted = false;
@@ -124,14 +103,13 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 			/** - Cancel Right-click + Drag */
 			exitFunction = mouseTweaks_cancelRightClickDrag();
 
-			/** - Get held item */
-			ItemInstance cursorStack = minecraft.player.inventory.getCursorItem();
-
 			/** - Handle Left-click */
+			ItemInstance cursorStack = minecraft.player.inventory.getCursorItem();
+			Slot clickedSlot = this.getSlot(mouseX, mouseY);
 			if (cursorStack != null) {
-				exitFunction |= mouseTweaks_handleLeftClickWithItem(cursorStack, mouseX, mouseY);
+				exitFunction |= mouseTweaks_handleLeftClickWithItem(cursorStack, clickedSlot);
 			} else {
-				exitFunction |= mouseTweaks_handleLeftClickWithoutItem(mouseX, mouseY);
+				exitFunction |= mouseTweaks_handleLeftClickWithoutItem(clickedSlot);
 			}
 
 			if (exitFunction) {
@@ -301,18 +279,23 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 		return false;
 	}
 
-	@Unique private boolean mouseTweaks_handleLeftClickWithItem(ItemInstance cursorStack, int mouseX, int mouseY)
+	@Unique private void mouseTweaks_resetRightClickDragVariables()
 	{
+		rightClickExistingAmount.clear();
+		rightClickHoveredSlots.clear();
+		rightClickPersistentStack = null;
+		rightClickItemAmount = 0;
+		isRightClickDragStarted = false;
+	}
+
+	@Unique private boolean mouseTweaks_handleLeftClickWithItem(ItemInstance cursorStack, Slot clickedSlot) {
 		/** - Ensure a slot was clicked */
-		Slot clickedSlot = this.getSlot(mouseX, mouseY);
 		if (clickedSlot != null) {
 			/** - Record how many items are in the slot and how many items are needed to fill the slot */
 			if (null != clickedSlot.getItem()) {
 				leftClickAmountToFillPersistent.add(cursorStack.getMaxStackSize() - clickedSlot.getItem().count);
 				leftClickExistingAmount.add(clickedSlot.getItem().count);
-			}
-			else
-			{
+			} else {
 				leftClickAmountToFillPersistent.add(cursorStack.getMaxStackSize());
 				leftClickExistingAmount.add(0);
 			}
@@ -333,11 +316,10 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 		return false;
 	}
 
-	@Unique private boolean mouseTweaks_handleLeftClickWithoutItem(int mouseX, int mouseY) {
+	@Unique private boolean mouseTweaks_handleLeftClickWithoutItem(Slot clickedSlot) {
 		isLeftClickDragMouseTweaksStarted = true;
 
 		/** - Ensure a slot was clicked */
-		Slot clickedSlot = this.getSlot(mouseX, mouseY);
 		if (clickedSlot != null) {
 			/** - Get info for MouseTweaks `Left-Click + Drag` mechanics */
 			ItemInstance itemInSlot = clickedSlot.getItem();
@@ -523,6 +505,18 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 		}
 
 		return false;
+	}
+
+	@Unique private void mouseTweaks_resetLeftClickDragVariables()
+	{
+		leftClickExistingAmount.clear();
+		leftClickAmountToFillPersistent.clear();
+		leftClickHoveredSlots.clear();
+		leftClickPersistentStack = null;
+		leftClickMouseTweaksPersistentStack = null;
+		leftClickItemAmount = 0;
+		isLeftClickDragStarted = false;
+		isLeftClickDragMouseTweaksStarted = false;
 	}
 
 	@Unique
