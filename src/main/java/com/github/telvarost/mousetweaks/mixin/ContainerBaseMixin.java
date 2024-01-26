@@ -101,147 +101,44 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 
 		/** - Right-click */
 		if (button == 1) {
-			/** - Get held item */
-			ItemInstance cursorStack = minecraft.player.inventory.getCursorItem();
+			boolean exitFunction = false;
 
 			/** - Cancel Left-click + Drag */
-			if (isLeftClickDragStarted) {
-				if (leftClickHoveredSlots.size() > 1) {
-					/** - Handle if a button was clicked */
-					super.mouseClicked(mouseX, mouseY, button);
+			exitFunction = mouseTweaks_cancelLeftClickDrag();
 
-					/** - Return all slots to normal */
-					minecraft.player.inventory.setCursorItem(new ItemInstance(leftClickPersistentStack.itemId, leftClickItemAmount, leftClickPersistentStack.getDamage()));
-					for (int leftClickHoveredSlotsIndex = 0; leftClickHoveredSlotsIndex < leftClickHoveredSlots.size(); leftClickHoveredSlotsIndex++) {
-						if (0 != leftClickExistingAmount.get(leftClickHoveredSlotsIndex)) {
-							leftClickHoveredSlots.get(leftClickHoveredSlotsIndex).setStack(new ItemInstance(leftClickPersistentStack.itemId, leftClickExistingAmount.get(leftClickHoveredSlotsIndex), leftClickPersistentStack.getDamage()));
-						} else {
-							leftClickHoveredSlots.get(leftClickHoveredSlotsIndex).setStack(null);
-						}
-					}
+			/** - Handle Right-click */
+			exitFunction |= mouseTweaks_handleRightClick(mouseX, mouseY);
 
-					/** - Reset Left-click + Drag variables and exit function */
-					mouseTweaks_resetLeftClickDragVariables();
-					ci.cancel();
-					return;
-				}
-			}
-
-			/** - Handle Right-click if an item is held */
-			if (cursorStack != null) {
-				/** - Ensure a slot was clicked */
-				Slot clickedSlot = this.getSlot(mouseX, mouseY);
-				if (clickedSlot != null) {
-					/** - Handle if a button was clicked */
-					super.mouseClicked(mouseX, mouseY, button);
-
-					/** - Record how many items are in the slot */
-					if (null != clickedSlot.getItem()) {
-						rightClickExistingAmount.add(clickedSlot.getItem().count);
-					}
-					else
-					{
-						rightClickExistingAmount.add(0);
-					}
-
-					/** - Begin Right-click + Drag */
-					if (cursorStack != null && rightClickPersistentStack == null && isRightClickDragStarted == false) {
-						rightClickPersistentStack = cursorStack;
-						rightClickItemAmount = rightClickPersistentStack.count;
-						isRightClickDragStarted = true;
-					}
-
-					/** - Handle initial Right-click */
-					lastRMBSlotId = clickedSlot.id;
-					this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, clickedSlot.id, 1, false, this.minecraft.player);
-					ci.cancel();
-					return;
-				}
+			if (exitFunction) {
+				/** - Handle if a button was clicked */
+				super.mouseClicked(mouseX, mouseY, button);
+				ci.cancel();
+				return;
 			}
 		}
 
 		/** - Left-click */
 		if (button == 0) {
+			boolean exitFunction = false;
+
+			/** - Cancel Right-click + Drag */
+			exitFunction = mouseTweaks_cancelRightClickDrag();
+
 			/** - Get held item */
 			ItemInstance cursorStack = minecraft.player.inventory.getCursorItem();
 
-			/** - Cancel Right-click + Drag */
-			if (isRightClickDragStarted) {
-				if (rightClickHoveredSlots.size() > 1) {
-					/** - Handle if a button was clicked */
-					super.mouseClicked(mouseX, mouseY, button);
-
-					/** - Return all slots to normal */
-					minecraft.player.inventory.setCursorItem(new ItemInstance(rightClickPersistentStack.itemId, rightClickItemAmount, rightClickPersistentStack.getDamage()));
-					for (int leftClickHoveredSlotsIndex = 0; leftClickHoveredSlotsIndex < rightClickHoveredSlots.size(); leftClickHoveredSlotsIndex++) {
-						if (0 != rightClickExistingAmount.get(leftClickHoveredSlotsIndex)) {
-							rightClickHoveredSlots.get(leftClickHoveredSlotsIndex).setStack(new ItemInstance(rightClickPersistentStack.itemId, rightClickExistingAmount.get(leftClickHoveredSlotsIndex), rightClickPersistentStack.getDamage()));
-						} else {
-							rightClickHoveredSlots.get(leftClickHoveredSlotsIndex).setStack(null);
-						}
-					}
-
-					/** - Reset Right-click + Drag variables and exit function */
-					mouseTweaks_resetRightClickDragVariables();
-					ci.cancel();
-					return;
-				}
+			/** - Handle Left-click */
+			if (cursorStack != null) {
+				exitFunction |= mouseTweaks_handleLeftClickWithItem(cursorStack, mouseX, mouseY);
+			} else {
+				exitFunction |= mouseTweaks_handleLeftClickWithoutItem(mouseX, mouseY);
 			}
 
-			/** - Handle Left-click if an item is held */
-			if (cursorStack != null) {
-				/** - Ensure a slot was clicked */
-				Slot clickedSlot = this.getSlot(mouseX, mouseY);
-				if (clickedSlot != null) {
-					/** - Handle if a button was clicked */
-					super.mouseClicked(mouseX, mouseY, button);
-
-					/** - Record how many items are in the slot and how many items are needed to fill the slot */
-					if (null != clickedSlot.getItem()) {
-						leftClickAmountToFillPersistent.add(cursorStack.getMaxStackSize() - clickedSlot.getItem().count);
-						leftClickExistingAmount.add(clickedSlot.getItem().count);
-					}
-					else
-					{
-						leftClickAmountToFillPersistent.add(cursorStack.getMaxStackSize());
-						leftClickExistingAmount.add(0);
-					}
-
-					/** - Begin Left-click + Drag */
-					if (cursorStack != null && leftClickPersistentStack == null && isLeftClickDragStarted == false) {
-						leftClickPersistentStack = cursorStack;
-						leftClickItemAmount = leftClickPersistentStack.count;
-						isLeftClickDragStarted = true;
-					}
-
-					/** - Handle initial Left-click */
-					this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, clickedSlot.id, 0, false, this.minecraft.player);
-					ci.cancel();
-					return;
-				}
-			} else {
-				isLeftClickDragMouseTweaksStarted = true;
-
-				/** - Ensure a slot was clicked */
-				Slot clickedSlot = this.getSlot(mouseX, mouseY);
-				if (clickedSlot != null) {
-					/** - Handle if a button was clicked */
-					super.mouseClicked(mouseX, mouseY, button);
-
-					/** - Get info for MouseTweaks `Left-Click + Drag` mechanics */
-					ItemInstance itemInSlot = clickedSlot.getItem();
-					leftClickMouseTweaksPersistentStack = itemInSlot;
-
-					/** - Handle initial Left-click */
-					boolean isShiftKeyDown = (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT));
-					this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, clickedSlot.id, 0, isShiftKeyDown, this.minecraft.player);
-
-					ci.cancel();
-					return;
-				} else {
-					/** - Get info for MouseTweaks `Left-Click + Drag` mechanics */
-					leftClickMouseTweaksPersistentStack = null;
-				}
+			if (exitFunction) {
+				/** - Handle if a button was clicked */
+				super.mouseClicked(mouseX, mouseY, button);
+				ci.cancel();
+				return;
 			}
 		}
 	}
@@ -262,54 +159,10 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 		   && ( rightClickPersistentStack != null )
 		   )
 		{
-			/** - Do nothing if slot has already been added to Right-click + Drag logic */
 			if (!rightClickHoveredSlots.contains(slot)) {
-				ItemInstance slotItemToExamine = slot.getItem();
-
-				/** - Do nothing if slot item does not match held item */
-				if (null != slotItemToExamine && !slotItemToExamine.isDamageAndIDIdentical(rightClickPersistentStack)) {
-					return;
-				}
-
-				/** - Do nothing if the slot is full */
-				if (null != slotItemToExamine && slotItemToExamine.count == rightClickPersistentStack.getMaxStackSize()) {
-					return;
-				}
-
-				/** - Do nothing if there are no more items to distribute */
-				ItemInstance cursorStack = minecraft.player.inventory.getCursorItem();
-				if (null == cursorStack) {
-					return;
-				}
-
-				/** - Add slot to item distribution */
-				rightClickHoveredSlots.add(slot);
-
-				/** - First slot is handled instantly in mouseClicked function */
-				if (rightClickHoveredSlots.size() > 1) {
-					/** - Record how many items are in the slot */
-					if (null != slotItemToExamine) {
-						rightClickExistingAmount.add(slotItemToExamine.count);
-					}
-					else
-					{
-						rightClickExistingAmount.add(0);
-					}
-
-					/** - Distribute one item to the slot */
-					lastRMBSlotId = slot.id;
-					this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 1, false, this.minecraft.player);
-				}
+				mouseTweaks_handleRightClickDrag();
 			} else if (Config.ConfigFields.RMBTweak) {
-				if (slot.id != lastRMBSlotId) {
-					ItemInstance cursorStack = minecraft.player.inventory.getCursorItem();
-
-					if (null != cursorStack) {
-						/** - Distribute one item to the slot */
-						lastRMBSlotId = slot.id;
-						this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 1, false, this.minecraft.player);
-					}
-				}
+				mouseTweaks_handleRightClickDragMouseTweaks();
 			}
 		} else {
 			mouseTweaks_resetRightClickDragVariables();
@@ -321,153 +174,355 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 		   && ( isRightClickDragStarted == false )
 		   )
 		{
-			if (isLeftClickDragMouseTweaksStarted)
-			{
-				if (slot.id != lastLMBSlotId) {
-					lastLMBSlotId = slot.id;
-
-					ItemInstance slotItemToExamine = slot.getItem();
-					if (null != slotItemToExamine)
-					{
-						if (null != leftClickMouseTweaksPersistentStack)
-						{
-							if (slotItemToExamine.isDamageAndIDIdentical(leftClickMouseTweaksPersistentStack))
-							{
-								if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) {
-									if (Config.ConfigFields.LMBTweakWithItem)
-									{
-										this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, true, this.minecraft.player);
-									}
-								} else {
-									ItemInstance cursorStack = minecraft.player.inventory.getCursorItem();
-
-									if (cursorStack == null) {
-										/** - Pick up items from slot */
-										this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, false, this.minecraft.player);
-									} else if (cursorStack.count < leftClickMouseTweaksPersistentStack.getMaxStackSize()) {
-										/** @todo - All of the logic in this block could be improved */
-										int amountAbleToPickUp = leftClickMouseTweaksPersistentStack.getMaxStackSize() - cursorStack.count;
-										int amountInSlot = slotItemToExamine.count;
-
-										if (amountInSlot <= amountAbleToPickUp) {
-											/** - Pick up items from slot */
-											this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, false, this.minecraft.player);
-											this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, false, this.minecraft.player);
-										} else if (cursorStack.count == leftClickMouseTweaksPersistentStack.getMaxStackSize()) {
-											slot.setStack(new ItemInstance(leftClickMouseTweaksPersistentStack.itemId, cursorStack.count, leftClickMouseTweaksPersistentStack.getDamage()));
-											minecraft.player.inventory.setCursorItem(new ItemInstance(leftClickMouseTweaksPersistentStack.itemId, amountInSlot, leftClickMouseTweaksPersistentStack.getDamage()));
-										} else {
-											this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, false, this.minecraft.player);
-
-											slotItemToExamine = slot.getItem();
-											cursorStack = minecraft.player.inventory.getCursorItem();
-											amountInSlot = slotItemToExamine.count;
-
-											slot.setStack(new ItemInstance(leftClickMouseTweaksPersistentStack.itemId, cursorStack.count, leftClickMouseTweaksPersistentStack.getDamage()));
-											minecraft.player.inventory.setCursorItem(new ItemInstance(leftClickMouseTweaksPersistentStack.itemId, amountInSlot, leftClickMouseTweaksPersistentStack.getDamage()));
-										}
-									}
-								}
-							}
-						} else if (  (Config.ConfigFields.LMBTweakWithoutItem)
-								  && (  (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
-							         || (Keyboard.isKeyDown(Keyboard.KEY_RSHIFT))
-					                 )
-					    ) {
-							this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, true, this.minecraft.player);
-						}
-					}
-				}
+			if (isLeftClickDragMouseTweaksStarted) {
+				mouseTweaks_handleLeftClickDragMouseTweaks();
 			} else if ( leftClickPersistentStack != null ) {
-				/** - Do nothing if slot has already been added to Left-click + Drag logic */
-				if (!leftClickHoveredSlots.contains(slot)) {
-					ItemInstance slotItemToExamine = slot.getItem();
-
-					/** - Do nothing if slot item does not match held item */
-					if (null != slotItemToExamine && !slotItemToExamine.isDamageAndIDIdentical(leftClickPersistentStack)){
-						return;
-					}
-
-					/** - Do nothing if there are no more items to distribute */
-					if (1.0 == (double)leftClickItemAmount / (double)leftClickHoveredSlots.size()) {
-						return;
-					}
-
-					/** - Add slot to item distribution */
-					leftClickHoveredSlots.add(slot);
-
-					/** - First slot is handled instantly in mouseClicked function */
-					if (leftClickHoveredSlots.size() > 1) {
-						/** - Record how many items are in the slot and how many items are needed to fill the slot */
-						if (null != slotItemToExamine) {
-							leftClickAmountToFillPersistent.add(leftClickPersistentStack.getMaxStackSize() - slotItemToExamine.count);
-							leftClickExistingAmount.add(slotItemToExamine.count);
-						}
-						else
-						{
-							leftClickAmountToFillPersistent.add(leftClickPersistentStack.getMaxStackSize());
-							leftClickExistingAmount.add(0);
-						}
-
-						/** - Return all slots to normal */
-						List<Integer> leftClickAmountToFill = new ArrayList<>();
-						minecraft.player.inventory.setCursorItem(new ItemInstance(leftClickPersistentStack.itemId, leftClickItemAmount, leftClickPersistentStack.getDamage()));
-						for (int leftClickHoveredSlotsIndex = 0; leftClickHoveredSlotsIndex < leftClickHoveredSlots.size(); leftClickHoveredSlotsIndex++) {
-							leftClickAmountToFill.add(leftClickAmountToFillPersistent.get(leftClickHoveredSlotsIndex));
-							if (0 != leftClickExistingAmount.get(leftClickHoveredSlotsIndex)) {
-								leftClickHoveredSlots.get(leftClickHoveredSlotsIndex).setStack(new ItemInstance(leftClickPersistentStack.itemId, leftClickExistingAmount.get(leftClickHoveredSlotsIndex), leftClickPersistentStack.getDamage()));
-							} else {
-								leftClickHoveredSlots.get(leftClickHoveredSlotsIndex).setStack(null);
-							}
-						}
-
-						/** - Prepare to distribute over slots */
-						int numberOfSlotsRemainingToFill = leftClickHoveredSlots.size();
-						int itemsPerSlot = leftClickItemAmount / numberOfSlotsRemainingToFill;
-						int leftClickRemainingItemAmount = leftClickItemAmount;
-						boolean rerunLoop;
-
-						/** - Distribute fewer items to slots whose max stack size will be filled */
-						do {
-							rerunLoop = false;
-							if (0 != numberOfSlotsRemainingToFill) {
-								itemsPerSlot = leftClickRemainingItemAmount / numberOfSlotsRemainingToFill;
-
-								if (0 != itemsPerSlot)
-								{
-									for (int slotsToCheckIndex = 0; slotsToCheckIndex < leftClickAmountToFill.size(); slotsToCheckIndex++) {
-										if (0 != leftClickAmountToFill.get(slotsToCheckIndex) && leftClickAmountToFill.get(slotsToCheckIndex) < itemsPerSlot) {
-											/** - Just fill the slot and return */
-											for (int fillTheAmountIndex = 0; fillTheAmountIndex < leftClickAmountToFill.get(slotsToCheckIndex); fillTheAmountIndex++) {
-												this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, leftClickHoveredSlots.get(slotsToCheckIndex).id, 1, false, this.minecraft.player);
-											}
-
-											leftClickRemainingItemAmount = leftClickRemainingItemAmount - leftClickAmountToFill.get(slotsToCheckIndex);
-											leftClickAmountToFill.set(slotsToCheckIndex, 0);
-											numberOfSlotsRemainingToFill--;
-											rerunLoop = true;
-										}
-									}
-								}
-							}
-						} while (rerunLoop && 0 != numberOfSlotsRemainingToFill);
-
-						/** - Distribute remaining items evenly over remaining slots that were not already filled to max stack size */
-						for (int distributeSlotsIndex = 0; distributeSlotsIndex < leftClickHoveredSlots.size(); distributeSlotsIndex++) {
-							if (0 != leftClickAmountToFill.get(distributeSlotsIndex)) {
-								for (int addSlotIndex = 0; addSlotIndex < itemsPerSlot; addSlotIndex++) {
-									this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, leftClickHoveredSlots.get(distributeSlotsIndex).id, 1, false, this.minecraft.player);
-								}
-							}
-						}
-					}
-				}
+				mouseTweaks_handleLeftClickDrag();
 			} else {
 				mouseTweaks_resetLeftClickDragVariables();
 			}
 		} else {
 			mouseTweaks_resetLeftClickDragVariables();
 		}
+	}
+
+	@Unique private boolean mouseTweaks_handleRightClick(int mouseX, int mouseY) {
+		/** - Get held item */
+		ItemInstance cursorStack = minecraft.player.inventory.getCursorItem();
+
+		/** - Handle Right-click if an item is held */
+		if (cursorStack != null) {
+
+			/** - Ensure a slot was clicked */
+			Slot clickedSlot = this.getSlot(mouseX, mouseY);
+			if (clickedSlot != null) {
+
+				/** - Record how many items are in the slot */
+				if (null != clickedSlot.getItem()) {
+					rightClickExistingAmount.add(clickedSlot.getItem().count);
+				}
+				else
+				{
+					rightClickExistingAmount.add(0);
+				}
+
+				/** - Begin Right-click + Drag */
+				if (cursorStack != null && rightClickPersistentStack == null && isRightClickDragStarted == false) {
+					rightClickPersistentStack = cursorStack;
+					rightClickItemAmount = rightClickPersistentStack.count;
+					isRightClickDragStarted = true;
+				}
+
+				/** - Handle initial Right-click */
+				lastRMBSlotId = clickedSlot.id;
+				this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, clickedSlot.id, 1, false, this.minecraft.player);
+
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	@Unique private void mouseTweaks_handleRightClickDragMouseTweaks() {
+		if (slot.id != lastRMBSlotId) {
+			ItemInstance cursorStack = minecraft.player.inventory.getCursorItem();
+
+			if (null != cursorStack) {
+				/** - Distribute one item to the slot */
+				lastRMBSlotId = slot.id;
+				this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 1, false, this.minecraft.player);
+			}
+		}
+	}
+
+	@Unique private void mouseTweaks_handleRightClickDrag() {
+		ItemInstance slotItemToExamine = slot.getItem();
+
+		/** - Do nothing if slot item does not match held item */
+		if (null != slotItemToExamine && !slotItemToExamine.isDamageAndIDIdentical(rightClickPersistentStack)) {
+			return;
+		}
+
+		/** - Do nothing if the slot is full */
+		if (null != slotItemToExamine && slotItemToExamine.count == rightClickPersistentStack.getMaxStackSize()) {
+			return;
+		}
+
+		/** - Do nothing if there are no more items to distribute */
+		ItemInstance cursorStack = minecraft.player.inventory.getCursorItem();
+		if (null == cursorStack) {
+			return;
+		}
+
+		/** - Add slot to item distribution */
+		rightClickHoveredSlots.add(slot);
+
+		/** - First slot is handled instantly in mouseClicked function */
+		if (rightClickHoveredSlots.size() > 1) {
+			/** - Record how many items are in the slot */
+			if (null != slotItemToExamine) {
+				rightClickExistingAmount.add(slotItemToExamine.count);
+			}
+			else
+			{
+				rightClickExistingAmount.add(0);
+			}
+
+			/** - Distribute one item to the slot */
+			lastRMBSlotId = slot.id;
+			this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 1, false, this.minecraft.player);
+		}
+	}
+
+	@Unique private boolean mouseTweaks_cancelRightClickDrag()
+	{
+		/** - Cancel Right-click + Drag */
+		if (isRightClickDragStarted) {
+			if (rightClickHoveredSlots.size() > 1) {
+
+				/** - Return all slots to normal */
+				minecraft.player.inventory.setCursorItem(new ItemInstance(rightClickPersistentStack.itemId, rightClickItemAmount, rightClickPersistentStack.getDamage()));
+				for (int leftClickHoveredSlotsIndex = 0; leftClickHoveredSlotsIndex < rightClickHoveredSlots.size(); leftClickHoveredSlotsIndex++) {
+					if (0 != rightClickExistingAmount.get(leftClickHoveredSlotsIndex)) {
+						rightClickHoveredSlots.get(leftClickHoveredSlotsIndex).setStack(new ItemInstance(rightClickPersistentStack.itemId, rightClickExistingAmount.get(leftClickHoveredSlotsIndex), rightClickPersistentStack.getDamage()));
+					} else {
+						rightClickHoveredSlots.get(leftClickHoveredSlotsIndex).setStack(null);
+					}
+				}
+
+				/** - Reset Right-click + Drag variables and exit function */
+				mouseTweaks_resetRightClickDragVariables();
+
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	@Unique private boolean mouseTweaks_handleLeftClickWithItem(ItemInstance cursorStack, int mouseX, int mouseY)
+	{
+		/** - Ensure a slot was clicked */
+		Slot clickedSlot = this.getSlot(mouseX, mouseY);
+		if (clickedSlot != null) {
+			/** - Record how many items are in the slot and how many items are needed to fill the slot */
+			if (null != clickedSlot.getItem()) {
+				leftClickAmountToFillPersistent.add(cursorStack.getMaxStackSize() - clickedSlot.getItem().count);
+				leftClickExistingAmount.add(clickedSlot.getItem().count);
+			}
+			else
+			{
+				leftClickAmountToFillPersistent.add(cursorStack.getMaxStackSize());
+				leftClickExistingAmount.add(0);
+			}
+
+			/** - Begin Left-click + Drag */
+			if (cursorStack != null && leftClickPersistentStack == null && isLeftClickDragStarted == false) {
+				leftClickPersistentStack = cursorStack;
+				leftClickItemAmount = leftClickPersistentStack.count;
+				isLeftClickDragStarted = true;
+			}
+
+			/** - Handle initial Left-click */
+			this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, clickedSlot.id, 0, false, this.minecraft.player);
+
+			return true;
+		}
+
+		return false;
+	}
+
+	@Unique private boolean mouseTweaks_handleLeftClickWithoutItem(int mouseX, int mouseY) {
+		isLeftClickDragMouseTweaksStarted = true;
+
+		/** - Ensure a slot was clicked */
+		Slot clickedSlot = this.getSlot(mouseX, mouseY);
+		if (clickedSlot != null) {
+			/** - Get info for MouseTweaks `Left-Click + Drag` mechanics */
+			ItemInstance itemInSlot = clickedSlot.getItem();
+			leftClickMouseTweaksPersistentStack = itemInSlot;
+
+			/** - Handle initial Left-click */
+			boolean isShiftKeyDown = (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT));
+			this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, clickedSlot.id, 0, isShiftKeyDown, this.minecraft.player);
+
+			return true;
+		} else {
+			/** - Get info for MouseTweaks `Left-Click + Drag` mechanics */
+			leftClickMouseTweaksPersistentStack = null;
+		}
+
+		return false;
+	}
+
+	@Unique private void mouseTweaks_handleLeftClickDragMouseTweaks() {
+		if (slot.id != lastLMBSlotId) {
+			lastLMBSlotId = slot.id;
+
+			ItemInstance slotItemToExamine = slot.getItem();
+			if (null != slotItemToExamine)
+			{
+				if (null != leftClickMouseTweaksPersistentStack)
+				{
+					if (slotItemToExamine.isDamageAndIDIdentical(leftClickMouseTweaksPersistentStack))
+					{
+						if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) {
+							if (Config.ConfigFields.LMBTweakWithItem)
+							{
+								this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, true, this.minecraft.player);
+							}
+						} else {
+							ItemInstance cursorStack = minecraft.player.inventory.getCursorItem();
+
+							if (cursorStack == null) {
+								/** - Pick up items from slot */
+								this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, false, this.minecraft.player);
+							} else if (cursorStack.count < leftClickMouseTweaksPersistentStack.getMaxStackSize()) {
+								int amountAbleToPickUp = leftClickMouseTweaksPersistentStack.getMaxStackSize() - cursorStack.count;
+								int amountInSlot = slotItemToExamine.count;
+
+								/** - Pick up items from slot */
+								if (amountInSlot <= amountAbleToPickUp) {
+									this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, false, this.minecraft.player);
+									this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, false, this.minecraft.player);
+								} else if (cursorStack.count == leftClickMouseTweaksPersistentStack.getMaxStackSize()) {
+									slot.setStack(new ItemInstance(leftClickMouseTweaksPersistentStack.itemId, cursorStack.count, leftClickMouseTweaksPersistentStack.getDamage()));
+									minecraft.player.inventory.setCursorItem(new ItemInstance(leftClickMouseTweaksPersistentStack.itemId, amountInSlot, leftClickMouseTweaksPersistentStack.getDamage()));
+								} else {
+									this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, false, this.minecraft.player);
+
+									slotItemToExamine = slot.getItem();
+									cursorStack = minecraft.player.inventory.getCursorItem();
+									amountInSlot = slotItemToExamine.count;
+
+									slot.setStack(new ItemInstance(leftClickMouseTweaksPersistentStack.itemId, cursorStack.count, leftClickMouseTweaksPersistentStack.getDamage()));
+									minecraft.player.inventory.setCursorItem(new ItemInstance(leftClickMouseTweaksPersistentStack.itemId, amountInSlot, leftClickMouseTweaksPersistentStack.getDamage()));
+								}
+							}
+						}
+					}
+				} else if (  (Config.ConfigFields.LMBTweakWithoutItem)
+						&& (  (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT))
+						|| (Keyboard.isKeyDown(Keyboard.KEY_RSHIFT))
+				)
+				) {
+					this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, slot.id, 0, true, this.minecraft.player);
+				}
+			}
+		}
+	}
+
+	@Unique private void mouseTweaks_handleLeftClickDrag()
+	{
+		/** - Do nothing if slot has already been added to Left-click + Drag logic */
+		if (!leftClickHoveredSlots.contains(slot)) {
+			ItemInstance slotItemToExamine = slot.getItem();
+
+			/** - Do nothing if slot item does not match held item */
+			if (null != slotItemToExamine && !slotItemToExamine.isDamageAndIDIdentical(leftClickPersistentStack)){
+				return;
+			}
+
+			/** - Do nothing if there are no more items to distribute */
+			if (1.0 == (double)leftClickItemAmount / (double)leftClickHoveredSlots.size()) {
+				return;
+			}
+
+			/** - Add slot to item distribution */
+			leftClickHoveredSlots.add(slot);
+
+			/** - First slot is handled instantly in mouseClicked function */
+			if (leftClickHoveredSlots.size() > 1) {
+				/** - Record how many items are in the slot and how many items are needed to fill the slot */
+				if (null != slotItemToExamine) {
+					leftClickAmountToFillPersistent.add(leftClickPersistentStack.getMaxStackSize() - slotItemToExamine.count);
+					leftClickExistingAmount.add(slotItemToExamine.count);
+				}
+				else
+				{
+					leftClickAmountToFillPersistent.add(leftClickPersistentStack.getMaxStackSize());
+					leftClickExistingAmount.add(0);
+				}
+
+				/** - Return all slots to normal */
+				List<Integer> leftClickAmountToFill = new ArrayList<>();
+				minecraft.player.inventory.setCursorItem(new ItemInstance(leftClickPersistentStack.itemId, leftClickItemAmount, leftClickPersistentStack.getDamage()));
+				for (int leftClickHoveredSlotsIndex = 0; leftClickHoveredSlotsIndex < leftClickHoveredSlots.size(); leftClickHoveredSlotsIndex++) {
+					leftClickAmountToFill.add(leftClickAmountToFillPersistent.get(leftClickHoveredSlotsIndex));
+					if (0 != leftClickExistingAmount.get(leftClickHoveredSlotsIndex)) {
+						leftClickHoveredSlots.get(leftClickHoveredSlotsIndex).setStack(new ItemInstance(leftClickPersistentStack.itemId, leftClickExistingAmount.get(leftClickHoveredSlotsIndex), leftClickPersistentStack.getDamage()));
+					} else {
+						leftClickHoveredSlots.get(leftClickHoveredSlotsIndex).setStack(null);
+					}
+				}
+
+				/** - Prepare to distribute over slots */
+				int numberOfSlotsRemainingToFill = leftClickHoveredSlots.size();
+				int itemsPerSlot = leftClickItemAmount / numberOfSlotsRemainingToFill;
+				int leftClickRemainingItemAmount = leftClickItemAmount;
+				boolean rerunLoop;
+
+				/** - Distribute fewer items to slots whose max stack size will be filled */
+				do {
+					rerunLoop = false;
+					if (0 != numberOfSlotsRemainingToFill) {
+						itemsPerSlot = leftClickRemainingItemAmount / numberOfSlotsRemainingToFill;
+
+						if (0 != itemsPerSlot)
+						{
+							for (int slotsToCheckIndex = 0; slotsToCheckIndex < leftClickAmountToFill.size(); slotsToCheckIndex++) {
+								if (0 != leftClickAmountToFill.get(slotsToCheckIndex) && leftClickAmountToFill.get(slotsToCheckIndex) < itemsPerSlot) {
+									/** - Just fill the slot and return */
+									for (int fillTheAmountIndex = 0; fillTheAmountIndex < leftClickAmountToFill.get(slotsToCheckIndex); fillTheAmountIndex++) {
+										this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, leftClickHoveredSlots.get(slotsToCheckIndex).id, 1, false, this.minecraft.player);
+									}
+
+									leftClickRemainingItemAmount = leftClickRemainingItemAmount - leftClickAmountToFill.get(slotsToCheckIndex);
+									leftClickAmountToFill.set(slotsToCheckIndex, 0);
+									numberOfSlotsRemainingToFill--;
+									rerunLoop = true;
+								}
+							}
+						}
+					}
+				} while (rerunLoop && 0 != numberOfSlotsRemainingToFill);
+
+				/** - Distribute remaining items evenly over remaining slots that were not already filled to max stack size */
+				for (int distributeSlotsIndex = 0; distributeSlotsIndex < leftClickHoveredSlots.size(); distributeSlotsIndex++) {
+					if (0 != leftClickAmountToFill.get(distributeSlotsIndex)) {
+						for (int addSlotIndex = 0; addSlotIndex < itemsPerSlot; addSlotIndex++) {
+							this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, leftClickHoveredSlots.get(distributeSlotsIndex).id, 1, false, this.minecraft.player);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	@Unique private boolean mouseTweaks_cancelLeftClickDrag()
+	{
+		/** - Cancel Left-click + Drag */
+		if (isLeftClickDragStarted) {
+			if (leftClickHoveredSlots.size() > 1) {
+
+				/** - Return all slots to normal */
+				minecraft.player.inventory.setCursorItem(new ItemInstance(leftClickPersistentStack.itemId, leftClickItemAmount, leftClickPersistentStack.getDamage()));
+				for (int leftClickHoveredSlotsIndex = 0; leftClickHoveredSlotsIndex < leftClickHoveredSlots.size(); leftClickHoveredSlotsIndex++) {
+					if (0 != leftClickExistingAmount.get(leftClickHoveredSlotsIndex)) {
+						leftClickHoveredSlots.get(leftClickHoveredSlotsIndex).setStack(new ItemInstance(leftClickPersistentStack.itemId, leftClickExistingAmount.get(leftClickHoveredSlotsIndex), leftClickPersistentStack.getDamage()));
+					} else {
+						leftClickHoveredSlots.get(leftClickHoveredSlotsIndex).setStack(null);
+					}
+				}
+
+				/** - Reset Left-click + Drag variables and exit function */
+				mouseTweaks_resetLeftClickDragVariables();
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	@Unique
