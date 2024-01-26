@@ -342,6 +342,8 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 
 				if (isShiftKeyDown) {
 					mouseTweaks_resetLeftClickDragVariables();
+					leftClickMouseTweaksPersistentStack = cursorStack;
+					isLeftClickDragMouseTweaksStarted = true;
 				}
 			} else {
 				this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, clickedSlot.id, 0, false, this.minecraft.player);
