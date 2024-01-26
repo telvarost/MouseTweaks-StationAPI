@@ -3,7 +3,6 @@ package com.github.telvarost.mousetweaks.mixin;
 import com.github.telvarost.mousetweaks.Config;
 import net.minecraft.client.gui.screen.ScreenBase;
 import net.minecraft.client.gui.screen.container.ContainerBase;
-import net.minecraft.item.ItemBase;
 import net.minecraft.item.ItemInstance;
 import net.minecraft.container.slot.Slot;
 import org.lwjgl.input.Keyboard;
