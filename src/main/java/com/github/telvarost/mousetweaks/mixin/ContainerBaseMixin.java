@@ -206,9 +206,7 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 				/** - Record how many items are in the slot */
 				if (null != clickedSlot.getItem()) {
 					rightClickExistingAmount.add(clickedSlot.getItem().count);
-				}
-				else
-				{
+				} else {
 					rightClickExistingAmount.add(0);
 				}
 
@@ -222,7 +220,7 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 				/** - Handle initial Right-click */
 				lastRMBSlotId = clickedSlot.id;
 				lastRMBSlot = clickedSlot;
-				if (Config.ConfigFields.preferShiftClick) {
+				if (Config.ConfigFields.RMBPreferShiftClick) {
 					boolean isShiftKeyDown = (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT));
 					this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, clickedSlot.id, 1, isShiftKeyDown, this.minecraft.player);
 
@@ -336,7 +334,7 @@ public abstract class ContainerBaseMixin extends ScreenBase {
 			/** - Handle initial Left-click */
 			lastLMBSlotId = clickedSlot.id;
 			lastLMBSlot = clickedSlot;
-			if (Config.ConfigFields.preferShiftClick) {
+			if (Config.ConfigFields.LMBPreferShiftClick) {
 				boolean isShiftKeyDown = (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT));
 				this.minecraft.interactionManager.clickSlot(this.container.currentContainerId, clickedSlot.id, 0, isShiftKeyDown, this.minecraft.player);
 

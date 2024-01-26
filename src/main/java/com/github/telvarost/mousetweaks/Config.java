@@ -15,8 +15,11 @@ public class Config {
         @Comment("[Shift-Click] items of any type")
         public static Boolean LMBTweakWithoutItem = true;
 
-        @ConfigName("Prefer [Shift-Click] over [Click + Drag]")
-        public static Boolean preferShiftClick = true;
+        @ConfigName("Prefer [Shift-Click] over [Left-Click + Drag]")
+        public static Boolean LMBPreferShiftClick = true;
+
+        @ConfigName("Prefer [Shift-Click] over [Right-Click + Drag]")
+        public static Boolean RMBPreferShiftClick = true;
 
         @ConfigName("[Right-Click + Drag] over existing slots")
         public static Boolean RMBTweak = true;
